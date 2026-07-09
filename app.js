@@ -8,7 +8,16 @@ document.addEventListener('DOMContentLoaded', () => {
     window.scrollTo(0, 0);
 
     // ----------------------------------------------------
-    // 1. Default Data Config
+    // 1. Google Sheets Configuration (Centralized Database)
+    // ----------------------------------------------------
+    // To sync links for all visitors, create a Google Sheet with 4 columns:
+    // Column A: Title | Column B: Subtitle | Column C: URL | Column D: Icon
+    // Share the Sheet: File -> Share -> Publish to web (Choose Entire Document and CSV)
+    // Paste your Google Sheet ID here (the long string between /d/ and /edit in the URL)
+    const SPREADSHEET_ID = ''; // e.g., '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+
+    // ----------------------------------------------------
+    // 2. Default Data Config (Local Fallback)
     // ----------------------------------------------------
     const STORAGE_KEY = 'aria_linkinbio_data';
     
@@ -47,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    // Load data from LocalStorage or seed with defaults
+    // Load local data from LocalStorage or seed with defaults
     let appData = localStorage.getItem(STORAGE_KEY);
     if (!appData || appData.includes('"name":"Aria Thorne"') || appData.includes('"name":"Aria Thorne V2"')) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
@@ -62,9 +71,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------
-    // 2. Dynamic Page Renderer
+    // 3. Dynamic Page Renderer & Google Sheets Fetch
     // ----------------------------------------------------
-    renderPage(appData);
+    if (SPREADSHEET_ID) {
+        // Fetch published Google Sheet as CSV
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/pub?output=csv`;
+        fetch(csvUrl)
+            .then(res => {
+                if (!res.ok) throw new Error("Spreadsheet response was not ok");
+                return res.text();
+            })
+            .then(csvText => {
+                const parsedRows = parseCSV(csvText);
+                const googleLinks = [];
+
+                parsedRows.forEach(row => {
+                    // Expect columns: Title, Subtitle, URL, Icon
+                    // Skip header row if it contains 'title' or 'url'
+                    if (row[0] && row[2] && 
+                        row[0].toLowerCase() !== 'title' && 
+                        row[2].toLowerCase() !== 'url') {
+                        googleLinks.push({
+                            title: row[0].replace(/^"|"$/g, ''),
+                            subtitle: (row[1] || '').replace(/^"|"$/g, ''),
+                            url: row[2].replace(/^"|"$/g, ''),
+                            icon: (row[3] || 'generic').toLowerCase().replace(/^"|"$/g, '').trim()
+                        });
+                    }
+                });
+
+                if (googleLinks.length > 0) {
+                    appData.links = googleLinks;
+                    // Cache the synced links in localStorage as a backup
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                }
+                renderPage(appData);
+            })
+            .catch(err => {
+                console.warn("Failed to load links from Google Sheets, falling back to local cache.", err);
+                renderPage(appData);
+            });
+    } else {
+        renderPage(appData);
+    }
 
     function renderPage(data) {
         // Render Profile
@@ -75,11 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('profile-bio').innerHTML = data.profile.bio || '';
         }
 
-
-
         // Render Links List
         const linksContainer = document.getElementById('links-container');
-        linksContainer.innerHTML = ''; // Clear container
+        linksContainer.innerHTML = '';
 
         if (data.links && data.links.length > 0) {
             data.links.forEach(link => {
@@ -89,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 linkCard.rel = 'noopener noreferrer';
                 linkCard.classList.add('link-card');
 
-                // Get icon SVG string
                 const iconSVG = getIconSVG(link.icon);
 
                 linkCard.innerHTML = `
@@ -111,6 +157,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Helper: Simple CSV Parser
+    function parseCSV(text) {
+        const lines = text.split('\n');
+        const rows = [];
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const row = [];
+            let insideQuote = false;
+            let entry = '';
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                if (char === '"') {
+                    insideQuote = !insideQuote;
+                } else if (char === ',' && !insideQuote) {
+                    row.push(entry.trim());
+                    entry = '';
+                } else {
+                    entry += char;
+                }
+            }
+            row.push(entry.trim());
+            rows.push(row);
+        }
+        return rows;
+    }
+
     function getIconSVG(iconKey) {
         switch (iconKey) {
             case 'model':
@@ -128,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------
-    // 3. Mouse Follower Glow (Desktop only)
+    // 4. Mouse Follower Glow (Desktop only)
     // ----------------------------------------------------
     const cursorGlow = document.getElementById('cursor-glow');
     
@@ -142,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------
-    // 4. Share Button & Toast Notification
+    // 5. Share Button & Toast Notification
     // ----------------------------------------------------
     const shareBtn = document.getElementById('share-btn');
     const toast = document.getElementById('toast');
@@ -152,8 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fallbackCopy();
 
             const shareData = {
-                title: 'Aria Thorne | AI Creator & Tech Evangelist',
-                text: 'Explore custom AI models, tech collaborations, and digital art projects by Aria Thorne.',
+                title: 'Heyahaana | Digital Creator',
+                text: 'Explore custom AI models, tech collaborations, and digital art projects by Heyahaana.',
                 url: window.location.href
             };
 
