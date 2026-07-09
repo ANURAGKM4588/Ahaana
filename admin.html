@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aria Thorne | Admin Control Panel</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-body">
+    <!-- Ambient Background Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    
+    <!-- Passcode Lock Screen Modal -->
+    <div id="lock-screen" class="lock-screen-overlay">
+        <div class="lock-card">
+            <div class="lock-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h2>Nexus Admin Lock</h2>
+            <p>Please enter authorization passcode to update synthetic identity.</p>
+            <div class="passcode-input-group">
+                <input type="password" id="passcode-field" placeholder="••••••••" aria-label="Enter passcode">
+                <button id="passcode-submit-btn">Unlock</button>
+            </div>
+            <p id="lock-error-msg" class="lock-error-text"></p>
+            <a href="index.html" class="back-to-bio-btn">Cancel</a>
+        </div>
+    </div>
+
+    <!-- Main Admin Dashboard Panel (Hidden until unlocked) -->
+    <div id="admin-dashboard" class="container admin-container hidden">
+        <header class="admin-header fade-in">
+            <div class="admin-title-row">
+                <a href="index.html" class="back-arrow-link" title="Return to bio page">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </a>
+                <h1>Aria.Nexus Admin</h1>
+            </div>
+            <p class="admin-subtitle">Modify profile definitions, brand collaborations, and clickable links.</p>
+        </header>
+
+        <main class="admin-main fade-in-delayed">
+            <!-- 1. Profile Details Card -->
+            <section class="admin-card">
+                <div class="admin-card-header">
+                    <h3>1. Profile Customization</h3>
+                </div>
+                <div class="admin-card-body">
+                    <div class="form-group">
+                        <label for="admin-profile-name">Display Name</label>
+                        <input type="text" id="admin-profile-name" placeholder="Aria Thorne">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-profile-handle">Social Handle</label>
+                        <input type="text" id="admin-profile-handle" placeholder="@aria.nexus">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-profile-avatar">Avatar URL</label>
+                        <input type="text" id="admin-profile-avatar" placeholder="assets/avatar.png">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-profile-bio">Bio Text (HTML allowed)</label>
+                        <textarea id="admin-profile-bio" rows="3" placeholder="AI Synthesized Digital Creator..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+        <main class="admin-main fade-in-delayed">
+
+            <!-- 3. Links Management Grid -->
+            <section class="admin-card">
+                <div class="admin-card-header">
+                    <h3>3. Links Manager</h3>
+                </div>
+                <div class="admin-card-body">
+                    <!-- Current Links List Wrapper -->
+                    <div class="links-list-panel">
+                        <label>Active Links Listing</label>
+                        <div id="admin-links-list" class="admin-links-list">
+                            <!-- Populated dynamically via admin.js -->
+                        </div>
+                    </div>
+
+                    <hr class="admin-divider">
+
+                    <!-- Link Form for Add/Edit -->
+                    <div id="link-form-container" class="link-form-card">
+                        <h4 id="link-form-title">Add New Link Card</h4>
+                        <input type="hidden" id="edit-link-index" value="-1">
+                        
+                        <div class="form-group">
+                            <label for="admin-link-title">Link Title</label>
+                            <input type="text" id="admin-link-title" placeholder="e.g. Subscribe to Substack">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-link-subtitle">Link Subtitle (Description)</label>
+                            <input type="text" id="admin-link-subtitle" placeholder="e.g. Weekly updates on AI models">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-link-url">Target URL</label>
+                            <input type="text" id="admin-link-url" placeholder="https://domain.com/link">
+                        </div>
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="admin-link-icon">Icon Graphic</label>
+                                <select id="admin-link-icon">
+                                    <option value="model">Neural Grid / Database</option>
+                                    <option value="newsletter">Envelope / Mail</option>
+                                    <option value="portfolio">Globe / Planet</option>
+                                    <option value="keynote">Play Arrow</option>
+                                    <option value="generic">External Link Chain</option>
+                                </select>
+                            </div>
+                            <div class="form-group link-form-actions">
+                                <label class="hidden-label">Control</label>
+                                <div class="btn-group-2">
+                                    <button type="button" id="btn-save-link" class="admin-btn-secondary">Save Link</button>
+                                    <button type="button" id="btn-cancel-link" class="admin-btn-dark hidden">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Save Control Bar -->
+            <div class="admin-save-footer">
+                <button type="button" id="btn-save-dashboard" class="admin-btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Save All Changes
+                </button>
+                <a href="index.html" class="admin-btn-dark">Cancel &amp; Go Back</a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast" class="toast" role="alert">Changes persisted successfully!</div>
+
+    <!-- Admin Panel Script -->
+    <script src="admin.js"></script>
+</body>
+</html>
